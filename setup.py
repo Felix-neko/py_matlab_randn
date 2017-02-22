@@ -3,6 +3,10 @@ import os
 import distutils.ccompiler as cc
 import numpy
 
+import pip
+
+
+
 mkl_root_dir = os.environ.get('MKLROOT')
 
 if mkl_root_dir is None:
@@ -44,6 +48,9 @@ modules = [matlab_random]
 if mkl_root_dir is not None:
     modules.append(vsl_random)
 
+reqs = pip.req.parse_requirements(os.path.join(os.path.dirname(__file__), "requirements.txt"))
+
 setup(name='random_number',
       version='0.0.2',
-      ext_modules=modules)
+      ext_modules=modules,
+      install_requires=reqs)
