@@ -5,8 +5,6 @@ import numpy
 
 import pip
 
-
-
 mkl_root_dir = os.environ.get('MKLROOT')
 
 if mkl_root_dir is None:
@@ -53,4 +51,4 @@ reqs = pip.req.parse_requirements(os.path.join(os.path.dirname(__file__), "requi
 setup(name='random_number',
       version='0.0.2',
       ext_modules=modules,
-      install_requires=reqs)
+      install_requires=["numpy"])
