@@ -266,7 +266,7 @@ static PyTypeObject GeneratorType = {
     Generator_new,                 /* tp_new */
 };
 
-
+extern "C"
 MOD_INIT(matlab_random)
 {
     PyObject *m;
