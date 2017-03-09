@@ -8,7 +8,7 @@ import pip
 mkl_root_dir = os.environ.get('MKLROOT')
 
 if mkl_root_dir is None:
-    print 'MKLROOT environment variable is not defined. VSL version will not be installed'
+    print('MKLROOT environment variable is not defined. VSL version will not be installed')
     mkl_include_path = ''
     mkl_libs_path = ''
 else:

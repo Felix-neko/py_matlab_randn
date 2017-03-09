@@ -4,6 +4,29 @@
 #include <numpy/arrayobject.h>
 #include "matlab_random.h"
 
+
+#if PY_MAJOR_VERSION >= 3
+  #define MOD_ERROR_VAL NULL
+  #define MOD_SUCCESS_VAL(val) val
+  #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
+  #define MOD_DEF(ob, name, doc, methods) \
+          static struct PyModuleDef moduledef = { \
+            PyModuleDef_HEAD_INIT, name, doc, -1, methods, }; \
+          ob = PyModule_Create(&moduledef);
+#else
+  #define MOD_ERROR_VAL
+  #define MOD_SUCCESS_VAL(val)
+  #define MOD_INIT(name) void init##name(void)
+  #define MOD_DEF(ob, name, doc, methods) \
+          ob = Py_InitModule3(name, methods, doc);
+#endif
+
+
+static char
+module___doc__[] =
+"Random number generator based on matlab rand";
+
+
 typedef struct {
     PyObject_HEAD
     MatlabRandn mr;
@@ -12,7 +35,7 @@ typedef struct {
 static void Generator_dealloc(Generator *self)
 {
     self->mr.~MatlabRandn();
-    self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject* Generator_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -42,8 +65,8 @@ static PyObject* randn(Generator *self, PyObject *args, PyObject *kw)
     if (!PyArg_ParseTupleAndKeywords((PyObject*)args, kw, "O", keywords, &shape)) {
         return NULL;
     }
-    if (PyInt_Check(shape)) {
-        random_length = PyInt_AsLong(shape);
+    if (PyLong_Check(shape)) {
+        random_length = PyLong_AsLong(shape);
         arr_dims = (npy_intp*)malloc(sizeof(npy_intp));
         arr_dims[0] = random_length;
         tuple_size = 1;
@@ -52,8 +75,8 @@ static PyObject* randn(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
 			tuple_item = PyList_GetItem(shape, i);
-            if (PyInt_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyInt_AsLong(tuple_item);
+            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
+                tuple_item_long = PyLong_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
@@ -65,8 +88,8 @@ static PyObject* randn(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
 			tuple_item = PyTuple_GetItem(shape, i);
-            if (PyInt_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyInt_AsLong(tuple_item);
+            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
+                tuple_item_long = PyLong_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
@@ -120,8 +143,8 @@ static PyObject* random_sample(Generator *self, PyObject *args, PyObject *kw)
     if (!PyArg_ParseTupleAndKeywords((PyObject*)args, kw, "O", keywords, &shape)) {
         return NULL;
     }
-    if (PyInt_Check(shape)) {
-        random_length = PyInt_AsLong(shape);
+    if (PyLong_Check(shape)) {
+        random_length = PyLong_AsLong(shape);
         arr_dims = (npy_intp*)malloc(sizeof(npy_intp));
         arr_dims[0] = random_length;
         tuple_size = 1;
@@ -130,8 +153,8 @@ static PyObject* random_sample(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
             tuple_item = PyList_GetItem(shape, i);
-            if (PyInt_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyInt_AsLong(tuple_item);
+            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
+                tuple_item_long = PyLong_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
@@ -143,8 +166,8 @@ static PyObject* random_sample(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
             tuple_item = PyTuple_GetItem(shape, i);
-            if (PyInt_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyInt_AsLong(tuple_item);
+            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
+                tuple_item_long = PyLong_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
@@ -203,8 +226,7 @@ static PyMethodDef Methods[] =
 };
 
 static PyTypeObject GeneratorType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "matlab_random.Generator",     /*tp_name*/
     sizeof(Generator),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -244,22 +266,25 @@ static PyTypeObject GeneratorType = {
     Generator_new,                 /* tp_new */
 };
 
-PyMODINIT_FUNC
-initmatlab_random(void)
+
+MOD_INIT(matlab_random)
 {
-    PyObject* m;
-    if (PyType_Ready(&GeneratorType) < 0) {
-        return;
-    }
+    PyObject *m;
 
-    m = Py_InitModule("matlab_random", Methods);
+    MOD_DEF(m, "matlab_random", module___doc__,
+            Methods)
 
-    if (m == NULL) {
-        return;
-    }
+    if (m == NULL)
+        return MOD_ERROR_VAL;
+
+    if (PyType_Ready(&GeneratorType) < 0)
+        return MOD_ERROR_VAL;
 
     Py_INCREF(&GeneratorType);
     PyModule_AddObject(m, "Generator", (PyObject *)&GeneratorType);
+
     /* IMPORTANT: this must be called */
     import_array();
+
+    return MOD_SUCCESS_VAL(m);
 }
