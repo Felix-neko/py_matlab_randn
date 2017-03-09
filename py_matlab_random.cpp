@@ -6,6 +6,9 @@
 
 
 #if PY_MAJOR_VERSION >= 3
+  #define PyInt_Check PyLong_Check
+  #define PyInt_AsLong PyLong_AsLong
+
   #define MOD_ERROR_VAL NULL
   #define MOD_SUCCESS_VAL(val) val
   #define MOD_INIT(name) PyMODINIT_FUNC PyInit_##name(void)
@@ -65,8 +68,8 @@ static PyObject* randn(Generator *self, PyObject *args, PyObject *kw)
     if (!PyArg_ParseTupleAndKeywords((PyObject*)args, kw, "O", keywords, &shape)) {
         return NULL;
     }
-    if (PyLong_Check(shape)) {
-        random_length = PyLong_AsLong(shape);
+    if (PyInt_Check(shape)) {
+        random_length = PyInt_AsLong(shape);
         arr_dims = (npy_intp*)malloc(sizeof(npy_intp));
         arr_dims[0] = random_length;
         tuple_size = 1;
@@ -75,8 +78,8 @@ static PyObject* randn(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
 			tuple_item = PyList_GetItem(shape, i);
-            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyLong_AsLong(tuple_item);
+            if (PyInt_Check(tuple_item) || PyInt_Check(tuple_item)) {
+                tuple_item_long = PyInt_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
@@ -88,8 +91,8 @@ static PyObject* randn(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
 			tuple_item = PyTuple_GetItem(shape, i);
-            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyLong_AsLong(tuple_item);
+            if (PyInt_Check(tuple_item) || PyInt_Check(tuple_item)) {
+                tuple_item_long = PyInt_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
@@ -143,8 +146,8 @@ static PyObject* random_sample(Generator *self, PyObject *args, PyObject *kw)
     if (!PyArg_ParseTupleAndKeywords((PyObject*)args, kw, "O", keywords, &shape)) {
         return NULL;
     }
-    if (PyLong_Check(shape)) {
-        random_length = PyLong_AsLong(shape);
+    if (PyInt_Check(shape)) {
+        random_length = PyInt_AsLong(shape);
         arr_dims = (npy_intp*)malloc(sizeof(npy_intp));
         arr_dims[0] = random_length;
         tuple_size = 1;
@@ -153,8 +156,8 @@ static PyObject* random_sample(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
             tuple_item = PyList_GetItem(shape, i);
-            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyLong_AsLong(tuple_item);
+            if (PyInt_Check(tuple_item) || PyInt_Check(tuple_item)) {
+                tuple_item_long = PyInt_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
@@ -166,8 +169,8 @@ static PyObject* random_sample(Generator *self, PyObject *args, PyObject *kw)
         arr_dims = (npy_intp*)malloc(tuple_size*sizeof(npy_intp));
         for (i = 0; i < tuple_size; ++i) {
             tuple_item = PyTuple_GetItem(shape, i);
-            if (PyLong_Check(tuple_item) || PyLong_Check(tuple_item)) {
-                tuple_item_long = PyLong_AsLong(tuple_item);
+            if (PyInt_Check(tuple_item) || PyInt_Check(tuple_item)) {
+                tuple_item_long = PyInt_AsLong(tuple_item);
                 arr_dims[i] = tuple_item_long;
                 random_length *= tuple_item_long;
             } else {
