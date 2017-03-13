@@ -6,6 +6,11 @@
 #include "py3compat.h"
 
 
+static char
+module___doc__[] =
+"Random number generator based on matlab rand with vsl support";
+
+
 typedef struct {
     PyObject_HEAD
     VSLRandom mr;
@@ -248,7 +253,7 @@ static PyTypeObject GeneratorType = {
 
 
 extern "C"
-MOD_INIT(matlab_random)
+MOD_INIT(vsl_random)
 {
     PyObject *m;
 
