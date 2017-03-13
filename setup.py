@@ -36,6 +36,7 @@ matlab_random = Extension('matlab_random', sources=['py_matlab_random.cpp', 'mat
                           extra_compile_args=cflags,
                           language='c++')
 
+vsl_library_dirs = [mkl_libs_path] + [omp_path] if omp_path else []
 vsl_random = Extension('vsl_random', sources=['py_vsl_random.cpp', 'vsl_random.cpp'],
                         include_dirs=[numpy.get_include(), mkl_include_path],
                         library_dirs=[mkl_libs_path],
