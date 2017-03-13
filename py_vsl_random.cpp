@@ -3,6 +3,8 @@
 #include <Python.h>
 #include <numpy/arrayobject.h>
 #include "vsl_random.h"
+#include "py3compat.h"
+
 
 typedef struct {
     PyObject_HEAD
@@ -12,7 +14,7 @@ typedef struct {
 static void Generator_dealloc(Generator *self)
 {
     self->mr.~VSLRandom();
-    self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject* Generator_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -204,8 +206,7 @@ static PyMethodDef Methods[] =
 };
 
 static PyTypeObject GeneratorType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "matlab_random.Generator",     /*tp_name*/
     sizeof(Generator),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -245,22 +246,26 @@ static PyTypeObject GeneratorType = {
     Generator_new,                 /* tp_new */
 };
 
-PyMODINIT_FUNC
-initvsl_random(void)
+
+extern "C"
+MOD_INIT(matlab_random)
 {
-    PyObject* m;
-    if (PyType_Ready(&GeneratorType) < 0) {
-        return;
-    }
+    PyObject *m;
 
-    m = Py_InitModule("vsl_random", Methods);
+    MOD_DEF(m, "vsl_random", module___doc__,
+            Methods)
 
-    if (m == NULL) {
-        return;
-    }
+    if (m == NULL)
+        return MOD_ERROR_VAL;
+
+    if (PyType_Ready(&GeneratorType) < 0)
+        return MOD_ERROR_VAL;
 
     Py_INCREF(&GeneratorType);
     PyModule_AddObject(m, "Generator", (PyObject *)&GeneratorType);
+
     /* IMPORTANT: this must be called */
     import_array();
+
+    return MOD_SUCCESS_VAL(m);
 }
