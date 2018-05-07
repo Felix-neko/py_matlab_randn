@@ -1,30 +1,34 @@
-from distutils.core import setup, Extension
 import os
-import distutils.ccompiler as cc
+from setuptools import setup, Extension
+from distutils.command.build_ext import build_ext
+
 import numpy
 
-import pip
 
-mkl_root_dir = os.environ.get('MKLROOT')
+class build_ext_subclass( build_ext ):
+    def build_extensions(self):
+        compiler_type_string = self.compiler.compiler_type
+        if compiler_type_string == "msvc":
+            compiler_option = '/Ox'
+        else:
+            compiler_option = '-O3'
+        for e in self.extensions:
+            e.extra_compile_args = [compiler_option]
+        build_ext.build_extensions(self)
 
-if cc.get_default_compiler() is 'msvc':
-    cflags = ['/Ox']
-else:
-    cflags = ['-O3']
 
 matlab_random = Extension('matlab_random', sources=['py_matlab_random.cpp', 'matlab_random.cpp'],
                           include_dirs=[numpy.get_include()],
-                          extra_compile_args=cflags,
                           language='c++')
 
 
 modules = [matlab_random]
 
-reqs = list(pip.req.parse_requirements(os.path.join(os.path.dirname(__file__), "requirements.txt"), session="hack"))
+reqs = open(os.path.join(os.path.dirname(__file__), "requirements.txt"), "r").readlines()
 
-req_specs = [req.name for req in reqs]
 
 setup(name='random_number',
-      version='0.0.2',
+      version='0.0.3',
       ext_modules=modules,
-      requires=req_specs)
+      instasll_requires=reqs,
+      cmdclass={'build_ext': build_ext_subclass})
